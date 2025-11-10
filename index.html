@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Simulator</title>
+    <style>
+        /* CSS Reset dan Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fafafa; color: #262626; transition: background 0.3s, color 0.3s; }
+        .dark-mode { background: #000; color: #fff; }
+        .dark-mode .post { background: #1e1e1e; border: 1px solid #333; }
+        .dark-mode .story { background: #333; }
+        .dark-mode input { background: #333; color: #fff; border: 1px solid #555; }
+
+        /* Header */
+        header { position: fixed; top: 0; width: 100%; background: white; border-bottom: 1px solid #dbdbdb; padding: 0.5rem 1rem; display: flex; justify-content: space-between; align-items: center; z-index: 100; transition: background 0.3s; }
+        .dark-mode header { background: #000; border-bottom: 1px solid #333; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: #3897f0; }
+        .search { flex: 1; max-width: 200px; margin: 0 1rem; }
+        .search input { width: 100%; padding: 0.5rem; border: 1px solid #dbdbdb; border-radius: 5px; background: #fafafa; }
+        .dark-mode .search input { background: #333; border: 1px solid #555; }
+        .icons { display: flex; gap: 1rem; }
+        .icons i { font-size: 1.5rem; cursor: pointer; transition: color 0.3s; }
+        .icons i:hover { color: #3897f0; }
+        .dark-mode-toggle { cursor: pointer; }
+
+        /* Main Content */
+        main { margin-top: 60px; max-width: 600px; margin: 60px auto 0; padding: 0 1rem; }
+
+        /* Stories */
+        .stories { display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; padding: 1rem 0; }
+        .story { flex: 0 0 80px; text-align: center; cursor: pointer; transition: transform 0.3s; border-radius: 50%; background: white; padding: 0.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .dark-mode .story { background: #333; box-shadow: 0 2px 10px rgba(255,255,255,0.1); }
+        .story:hover { transform: scale(1.1); }
+        .story img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #3897f0; }
+        .story p { font-size: 0.8rem; margin-top: 0.5rem; }
+
+        /* Posts */
+        .post { background: white; border: 1px solid #dbdbdb; border-radius: 10px; margin-bottom: 2rem; overflow: hidden; transition: box-shadow 0.3s; }
+        .dark-mode .post { background: #1e1e1e; border: 1px solid #333; }
+        .post:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .post-header { display: flex; align-items: center; padding: 1rem; }
+        .post-header img { width: 40px; height: 40px; border-radius: 50%; margin-right: 1rem; }
+        .post-header h3 { font-size: 0.9rem; }
+        .post-image { width: 100%; height: 400px; background-size: cover; background-position: center; cursor: pointer; position: relative; }
+        .post-image img { width: 100%; height: 100%; object-fit: cover; }
+        .post-actions { padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .actions-left { display: flex; gap: 1rem; }
+        .action-btn { cursor: pointer; font-size: 1.5rem; transition: color 0.3s; }
+        .like-btn.liked { color: #ed4956; animation: heartBeat 0.3s; }
+        @keyframes heartBeat { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .post-caption { padding: 0 1rem 1rem; }
+        .post-likes { padding: 0 1rem 0.5rem; font-weight: bold; }
+        .comments { padding: 0 1rem 1rem; }
+        .comment { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .comment-input { display: flex; padding: 1rem; border-top: 1px solid #dbdbdb; }
+        .dark-mode .comment-input { border-top: 1px solid #333; }
+        .comment-input input { flex: 1; border: none; outline: none; background: transparent; }
+        .comment-input button { background: none; border: none; color: #3897f0; cursor: pointer; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center; }
+        .modal-content { max-width: 90%; max-height: 90%; position: relative; }
+        .modal img { width: 100%; height: auto; border-radius: 10px; }
+        .close { position: absolute; top: -40px; right: 0; color: white; font-size: 2rem; cursor: pointer; }
+
+        /* Responsive */
+        @media (max-width: 768px) { .search { display: none; } .icons { gap: 0.5rem; } .icons i { font-size: 1.2rem; } }
+
+        /* Scrollbar Custom */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .dark-mode ::-webkit-scrollbar-track { background: #333; }
+        .dark-mode ::-webkit-scrollbar-thumb { background: #555; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Instagram</div>
+        <div class="search">
+            <input type="text" placeholder="Search">
+        </div>
+        <div class="icons">
+            <i class="action-btn" onclick="toggleDarkMode()">🌙</i> <!-- Dark mode toggle -->
+            <i class="action-btn">🏠</i> <!-- Home -->
+            <i class="action-btn">✉</i> <!-- Messages -->
+            <i class="action-btn">❤</i> <!-- Notifications -->
+            <i class="action-btn">👤</i> <!-- Profile -->
+        </div>
+    </header>
+
+    <main>
+        <!-- Stories -->
+        <section class="stories">
+            <div class="story">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop" alt="Your Story">
+                <p>Your Story</p>
+            </div>
+            <div class="story">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop" alt="User 1">
+                <p>user1</p>
+            </div>
+            <div class="story">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop" alt="User 2">
+                <p>user2</p>
+            </div>
+            <div class="story">
+                <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop" alt="User 3">
+                <p>user3</p>
+            </div>
+        </section>
+
+        <!-- Post 1 -->
+        <article class="post" id="post1">
+            <div class="post-header">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop" alt="user1">
+                <h3>user1</h3>
+            </div>
+            <div class="post-image" onclick="openModal('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=600&fit=crop', 'post1')">
+                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop" alt="Post Image 1">
+            </div>
+            <div class="post-actions">
+                <div class="actions-left">
+                    <i class="action-btn like-btn" onclick="toggleLike('post1')">❤</i>
+                    <i class="action-btn">💬</i>
+                    <i class="action-btn">🔗</i>
+                </div>
+                <i class="action-btn">⭐</i>
+            </div>
+            <div class="post-likes" id="likes1">12 likes</div>
+            <div class="post-caption">
+                <h4>user1</h4>
+                <p>Beautiful day! #nature</p>
+            </div>
+            <div class="comments" id="comments1">
+                <div class="comment"><strong>user2:</strong> Nice pic!</div>
+            </div>
+            <div class="comment-input">
+                <input type="text" placeholder="Add a comment..." id="input1">
+                <button onclick="addComment('post1', 'input1')">Post</button>
+            </div>
+        </article>
+
+        <!-- Post 2 -->
+        <article class="post" id="post2">
+            <div class="post-header">
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop" alt="user2">
+                <h3>user2</h3>
+            </div>
+            <div class="post-image" onclick="openModal('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=600&fit=crop', 'post2')">
+                <img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=400&fit=crop" alt="Post Image 2">
+            </div>
+            <div class="post-actions">
+                <div class="actions-left">
+                    <i class="action-btn like-btn" onclick="toggleLike('post2')">❤</i>
+                    <i class="action-btn">💬</i>
+                    <i class="action-btn">🔗</i>
+                </div>
+                <i class="action-btn">⭐</i>
+            </div>
+            <div class="post-likes" id="likes2">25 likes</div>
+            <div class="post-caption">
+                <h4>user2</h4>
+                <p>Foodie vibes 🍔 #food</p>
+            </div>
+            <div class="comments" id="comments2">
+                <div class="comment"><strong>user1:</strong> Yummy!</div>
+            </div>
+            <div class="comment-input">
+                <input type="text" placeholder="Add a comment..." id="input2">
+                <button onclick="addComment('post2', 'input2')">Post</button>
+            </div>
+        </article>
+
+        <!-- Post 3 -->
+        <article class="post" id="post3">
+            <div class="post-header">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop" alt="user3">
+                <h3>user3</h3>
+            </div>
+            <div class="post-image" onclick="openModal('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=600&fit=crop', 'post3')">
+                <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop" alt="Post Image 3">
+            </div>
+            <div class="post-actions">
+                <div class="actions-left">
+                    <i class="action-btn like-btn" onclick="toggleLike('post3')">❤</i>
+                    <i class="action-btn">💬</i>
+                    <i class="action-btn">🔗</i>
+                </div>
+                <i class="action-btn">⭐</i>
+            </div>
+            <div class="post-likes" id="likes3">8 likes</div>
+            <div class="post-caption">
+                <h4>user3</h4>
+                <p>Travel time ✈ #adventure</p>
+            </div>
+            <div class="comments" id="comments3"></div>
+            <div class="comment-input">
+                <input type="text" placeholder="Add a comment..." id="input3">
+                <button onclick="addComment('post3', 'input3')">Post</button>
+            </div>
+        </article>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <img id="modal-img" src="" alt="Full Post">
+        </div>
+    </div>
+
+    <script>
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Like Toggle
+        const likes = { post1: 12, post2: 25, post3: 8 };
+        const likedPosts = JSON.parse(localStorage.getItem('likedPosts')) || {};
+        function toggleLike(postId) {
+            const btn = document.querySelector(#${postId} .like-btn);
+            const likesEl = document.getElementById(likes${postId.slice(-1)});
+            if (likedPosts[postId]) {
+                likes[postId]--;
+                btn.classList.remove('liked');
+                likedPosts[postId] = false;
+            } else {
+                likes[postId]++;
+                btn.classList.add('liked');
+                likedPosts[postId] = true;
+            }
+            likesEl.textContent = ${likes[postId]} likes;
+            localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+        }
+        // Init likes
+        Object.keys(likes).forEach(postId => {
+            if (likedPosts[postId]) {
+                document.querySelector(#${postId} .like-btn).classList.add('liked');
+                document.getElementById(likes${postId.slice(-1)}).textContent = ${likes[postId]} likes;
+            }
+        });
+
+        // Add Comment
+        function addComment(postId, inputId) {
+            const input = document.getElementById(inputId);
+            const comment = input.value.trim();
+            if (comment) {
+                const commentsDiv = document.getElementById(comments${postId.slice(-1)});
+                const new
